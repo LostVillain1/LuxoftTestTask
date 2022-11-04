@@ -35,9 +35,12 @@ def main():
             logging.info(f'Starting test {test_name}')
             run_task(blender_path, test_path, x_resolution, y_resolution, output_path)
             logging.info(f'Test {test_name} successfully executed')
-        except Exception as e:
+        except BlenderTestException as e:
             any_task_failed = True
             logging.error(e)
+        except Exception as e:
+            any_task_failed = True
+            logging.error(f"Failed to start test {get_test_name(test_path)} because of exception. Details: \n" + e.__str__())
 
     if any_task_failed:
         exit(1)
