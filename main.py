@@ -28,6 +28,7 @@ def main():
     if len(tests) == 0:
         raise BlenderTestException("No tests found in /tests directory")
 
+    any_task_failed = False
     for test_path in tests:
         try:
             test_name = get_test_name(test_path)
@@ -35,7 +36,11 @@ def main():
             run_task(blender_path, test_path, x_resolution, y_resolution, output_path)
             logging.info(f'Test {test_name} successfully executed')
         except Exception as e:
+            any_task_failed = True
             logging.error(e)
+
+    if any_task_failed:
+        exit(1)
 
 def get_test_name(test_path: str):
     return test_path[test_path.rindex('\\') + 1:]
