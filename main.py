@@ -6,6 +6,7 @@ from pathlib import Path
 from lib.blender_exep import BlenderTestException
 
 def main():
+    logging.basicConfig(level='INFO')
     params_len = len(sys.argv) - 1
     if params_len != 4:
         raise BlenderTestException("Incorrect number of input parameters. Got " + str(params_len) + " instead of 4")
@@ -29,19 +30,23 @@ def main():
 
     for test_path in tests:
         try:
+            test_name = get_test_name(test_path)
+            logging.info(f'Starting test {test_name}')
             run_task(blender_path, test_path, x_resolution, y_resolution, output_path)
-            print(f'Test {test_path} successfully executed')
+            logging.info(f'Test {test_name} successfully executed')
         except Exception as e:
             logging.error(e)
 
+def get_test_name(test_path: str):
+    return test_path[test_path.rindex('\\') + 1:]
 
 def run_task(blender_path, test_path, x_resolution, y_resolution, output_path):
-    cmd = [f"{blender_path}", "--python", f"{test_path}", "--", x_resolution, y_resolution, output_path]
+    cmd = [f"{blender_path}", "--python-exit-code", "1", "-b", "--python", f"{test_path}", "--", x_resolution, y_resolution, output_path]
     blender_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='UTF-8')
-    (_, err) = blender_proc.communicate()
-    if err and err.strip():
-        raise BlenderTestException(f"Test {test_path} returned not empty stderr. Details: \n" + err)
-        
+    (out, _) = blender_proc.communicate()
+    if blender_proc.returncode != 0:
+        raise BlenderTestException(f"Test {get_test_name(test_path)} returned non zero exit code. Details: \n" + out)
+
 
 if __name__ == "__main__":
     main()
